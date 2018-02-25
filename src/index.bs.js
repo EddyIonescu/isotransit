@@ -3,12 +3,12 @@
 
 var ReactDOMRe = require("reason-react/src/ReactDOMRe.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var App$ReasonScripts = require("./app.bs.js");
 var RegisterServiceWorker = require("./registerServiceWorker");
+var App$MultimodalIsochrone = require("./app.bs.js");
 
 ((require('./index.css')));
 
-ReactDOMRe.renderToElementWithId(ReasonReact.element(/* None */0, /* None */0, App$ReasonScripts.make("Welcome to React and Reason", /* array */[])), "root");
+ReactDOMRe.renderToElementWithId(ReasonReact.element(/* None */0, /* None */0, App$MultimodalIsochrone.make("Welcome to React and Reason", /* array */[])), "root");
 
 RegisterServiceWorker.default();
 

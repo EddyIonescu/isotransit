@@ -1,7 +1,11 @@
 # See https://help.github.com/ignore-files/ for more about ignoring files.
 
+#generated js
+./src/*.js
+./src/*.bs.js
+
 # keys
-./src/config.json
+# ./src/keysConfig.json
 
 # dependencies
 /node_modules
@@ -10,7 +14,7 @@
 /coverage
 
 # production
-/build
+# /build
 
 # bucklescript
 /lib

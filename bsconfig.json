@@ -1,5 +1,5 @@
 {
-  "name": "reason-scripts",
+  "name": "multimodal-isochrone",
   "sources": [
     "src"
   ],
@@ -7,11 +7,11 @@
     "module": "commonjs",
     "in-source": true
   }],
-  "suffix": ".bs.js",
   "namespace": true,
   "bs-dependencies": [
     "reason-react",
-    "bs-jest"
+    "bs-jest",
+    "bs-axios"
   ],
   "reason": {
     "react-jsx": 2

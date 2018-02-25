@@ -1,4 +1,4 @@
-[@bs.module "./map"] external map : ReasonReact.reactClass = "default";
+[@bs.module "./react_components/map.jsx"] external map : ReasonReact.reactClass = "default";
 
 let make = (~layers, children) =>
   ReasonReact.wrapJsForReason(

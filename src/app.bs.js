@@ -4,7 +4,7 @@
 var React = require("react");
 var LogoSvg = require("./logo.svg");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Map$ReasonScripts = require("./map.bs.js");
+var Map$MultimodalIsochrone = require("./map.bs.js");
 
 ((require('./app.css')));
 
@@ -21,7 +21,7 @@ function make(message, _) {
                           className: "App-logo",
                           alt: "logo",
                           src: LogoSvg
-                        }), React.createElement("h2", undefined, message)), ReasonReact.element(/* None */0, /* None */0, Map$ReasonScripts.make(/* [] */0, /* array */[])), React.createElement("p", {
+                        }), React.createElement("h2", undefined, message)), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make(/* [] */0, /* array */[])), React.createElement("p", {
                       className: "App-intro"
                     }, "To get started, edit", React.createElement("code", undefined, " src/app.re "), "and save to reload."));
     });
