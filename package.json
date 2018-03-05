@@ -1,5 +1,6 @@
 {
   "name": "multimodal-isochrone",
+  "homepage" : "http://eddyionescu.github.io/isotransit",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
