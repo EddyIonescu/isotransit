@@ -11,7 +11,7 @@ IsoTransit is a map that allows you to make time-based isochrones to see how far
 
 ## Short Drive + Rapid Transit
 - while trains and subways are great, getting to them is often inconvenient. Sometimes it's so inconvenient (ie. slow feeder buses or lack of parking) that other alternatives are taken. Thanks to Uber Pool/Lyft Line, short rides are now a lot cheaper, opening up new ways of getting around.
-- the isochrone can only be limited by how long a drive can take, which can be to, from, or in between transit stations.
+- the isochrone can only be limited by how long a drive can be. There can be unlimited drives as long as they start or end at a transit station.
 
 ## Getting Started
 
