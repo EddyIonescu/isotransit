@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { Component } from 'react';
 import ReactMapGL, { NavigationControl } from 'react-map-gl';
 import DeckGL, { PolygonLayer } from 'deck.gl';
@@ -54,6 +55,8 @@ class Map extends Component {
     };
     const { viewport } = this.state;
     let { layers } = this.props;
+    // flatten once as it contains multiple isochrones of the same colour
+    layers = _.flatten(layers);
     // put each shape under coordinates into a list
     layers = layers.map(layer => ([layer.coordinates]));
     // reverse lat,lng to lng,lat
@@ -79,6 +82,7 @@ class Map extends Component {
                 fillColor: [12, 250, 140],
               })),
               filled: true,
+              stroked: false,
             })] : []}
         />
       </ReactMapGL>

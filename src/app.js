@@ -2,13 +2,14 @@
 'use strict';
 
 var List = require("bs-platform/lib/js/list.js");
+var $$Array = require("bs-platform/lib/js/array.js");
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
 var Axios = require("axios");
 var React = require("react");
+var Caml_array = require("bs-platform/lib/js/caml_array.js");
 var Pervasives = require("bs-platform/lib/js/pervasives.js");
 var ReasonReact = require("reason-react/src/ReasonReact.js");
-var Caml_builtin_exceptions = require("bs-platform/lib/js/caml_builtin_exceptions.js");
 var Map$MultimodalIsochrone = require("./map.js");
 var Location$MultimodalIsochrone = require("./location.js");
 var SelectType$MultimodalIsochrone = require("./selectType.js");
@@ -19,62 +20,137 @@ var DateTimePicker$MultimodalIsochrone = require("./dateTimePicker.js");
 var selectOptions = /* array */[
   {
     value: /* Transit */0,
-    label: "Transit (30 minutes)"
+    label: "GRT/Walking (30 min)"
   },
   {
     value: /* Driving */1,
-    label: "Driving (30 minutes)"
+    label: "Driving (30 min)"
   },
   {
-    value: /* AV */2,
-    label: "Driving (max 10 minutes per trip) + ION LRT/BRT"
+    value: /* Ion */2,
+    label: "ION LRT + 10-minute Rideshare"
+  },
+  {
+    value: /* IonTransitOnly */3,
+    label: " ION LRT + 20-minute GRT/Walking"
   }
 ];
 
-function getIsochrone(selectedLocation, selectedTravelType, selectedTime, timeLengthMinutes) {
+var ionStops = /* array */[
+  /* float array */[
+    -80.52945144,
+    43.49813693
+  ],
+  /* float array */[
+    -80.54321203,
+    43.49721126
+  ],
+  /* float array */[
+    -80.54515806,
+    43.48162357
+  ],
+  /* float array */[
+    -80.5411648,
+    43.4732381
+  ],
+  /* float array */[
+    -80.53440443,
+    43.46885718
+  ],
+  /* float array */[
+    -80.52298867,
+    43.46414138
+  ],
+  /* float array */[
+    -80.52336904,
+    43.462144
+  ],
+  /* float array */[
+    -80.51836079,
+    43.45983591
+  ],
+  /* float array */[
+    -80.49913146,
+    43.45317562
+  ],
+  /* float array */[
+    -80.48734599,
+    43.44964771
+  ],
+  /* float array */[
+    -80.49370802,
+    43.4501848
+  ],
+  /* float array */[
+    -80.4894232,
+    43.448626
+  ],
+  /* float array */[
+    -80.4753731,
+    43.44240342
+  ],
+  /* float array */[
+    -80.48359184,
+    43.4462947
+  ],
+  /* float array */[
+    -80.47787648,
+    43.43358158
+  ],
+  /* float array */[
+    -80.44180343,
+    43.42232678
+  ],
+  /* float array */[
+    -80.49080288,
+    43.45192775
+  ],
+  /* float array */[
+    -80.46308195,
+    43.42282486
+  ],
+  /* float array */[
+    -80.51205622,
+    43.45728346
+  ]
+];
+
+function getIsochrone(state, specifiedLocation) {
+  var selectedLocation = specifiedLocation ? specifiedLocation[0] : state[/* selectedLocation */0];
+  var match = state[/* selectedTravelType */3];
+  var match$1 = state[/* selectedTravelType */3];
   var tmp;
-  switch (selectedTravelType) {
-    case 0 : 
-        tmp = "transit";
-        break;
+  switch (match$1) {
     case 1 : 
+    case 2 : 
         tmp = "driving";
         break;
-    case 2 : 
-        throw [
-              Caml_builtin_exceptions.match_failure,
-              [
-                "app.re",
-                93,
-                18
-              ]
-            ];
+    case 0 : 
+    case 3 : 
+        tmp = "transit";
+        break;
     
   }
+  var match$2 = state[/* selectedTravelType */3];
   var tmp$1;
-  switch (selectedTravelType) {
-    case 0 : 
-        tmp$1 = "time";
-        break;
+  switch (match$2) {
     case 1 : 
+    case 2 : 
         tmp$1 = "timeWithTraffic";
         break;
-    case 2 : 
-        throw [
-              Caml_builtin_exceptions.match_failure,
-              [
-                "app.re",
-                97,
-                16
-              ]
-            ];
+    case 0 : 
+    case 3 : 
+        tmp$1 = "time";
+        break;
     
   }
   var params = {
     waypoint: Pervasives.string_of_float(selectedLocation[/* lat */0]) + ("," + Pervasives.string_of_float(selectedLocation[/* lng */1])),
-    maxTime: timeLengthMinutes,
+    maxTime: match !== 2 ? (
+        match >= 3 ? 20 : state[/* timeLengthMinutes */4]
+      ) : state[/* shortTripTimeLengthMinutes */5],
     timeUnit: "minute",
-    dateTime: new Date(selectedTime).toUTCString(),
+    dateTime: new Date(state[/* selectedTime */1]).toUTCString(),
     travelMode: tmp,
     optimize: tmp$1
   };
@@ -95,7 +171,13 @@ function make() {
                                           ]]));
                           }), /* array */[])), React.createElement("button", {
                       onClick: (function () {
-                          getIsochrone(_self[/* state */2][/* selectedLocation */0], _self[/* state */2][/* selectedTravelType */3], _self[/* state */2][/* selectedTime */1], _self[/* state */2][/* timeLengthMinutes */4]).then((function (polygons) {
+                          var match = _self[/* state */2][/* selectedTravelType */3];
+                          Promise.all(match >= 2 ? $$Array.map((function (ionStop) {
+                                            return getIsochrone(_self[/* state */2], /* Some */[/* float array */[
+                                                          Caml_array.caml_array_get(ionStop, 1),
+                                                          Caml_array.caml_array_get(ionStop, 0)
+                                                        ]]);
+                                          }), ionStops) : /* array */[getIsochrone(_self[/* state */2], /* None */0)]).then((function (polygons) {
                                     console.log(polygons);
                                     return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons])));
                                   })).catch((function (error) {
@@ -103,11 +185,11 @@ function make() {
                                 }));
                           return /* () */0;
                         })
-                    }, React.createElement("h2", undefined, "Get Basic Isochrone")), ReasonReact.element(/* None */0, /* None */0, DateTimePicker$MultimodalIsochrone.make(_self[/* state */2][/* selectedTime */1], (function (selectedTime) {
+                    }, React.createElement("h2", undefined, "Generate Isochrone")), ReasonReact.element(/* None */0, /* None */0, DateTimePicker$MultimodalIsochrone.make(_self[/* state */2][/* selectedTime */1], (function (selectedTime) {
                             return Curry._1(_self[/* send */4], /* UpdateSelectedTime */Block.__(2, [selectedTime]));
                           }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make((function (t) {
                             return Curry._1(_self[/* send */4], /* TransportSelection */Block.__(1, [t.value]));
-                          }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make(_self[/* state */2][/* layers */6], /* array */[])));
+                          }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make(_self[/* state */2][/* layers */7], /* array */[])));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[
@@ -119,6 +201,7 @@ function make() {
               /* movingAwayIso : true */1,
               /* selectedTravelType : Transit */0,
               /* timeLengthMinutes */30,
+              /* shortTripTimeLengthMinutes */10,
               /* isochrones : [] */0,
               /* layers : array */[]
             ];
@@ -139,284 +222,12 @@ function make() {
             return /* Update */Block.__(0, [(newrecord$3[/* timeLengthMinutes */4] = action[0], newrecord$3)]);
         case 4 : 
             var newrecord$4 = state.slice();
-            return /* Update */Block.__(0, [(newrecord$4[/* layers */6] = action[0], newrecord$4)]);
+            return /* Update */Block.__(0, [(newrecord$4[/* layers */7] = action[0], newrecord$4)]);
         
       }
     });
   return newrecord;
 }
-
-var ionStops = /* :: */[
-  /* :: */[
-    -80.52945144,
-    /* :: */[
-      43.49813693,
-      /* [] */0
-    ]
-  ],
-  /* :: */[
-    /* :: */[
-      -80.54321203,
-      /* :: */[
-        43.49721126,
-        /* [] */0
-      ]
-    ],
-    /* :: */[
-      /* :: */[
-        -80.54515806,
-        /* :: */[
-          43.48162357,
-          /* [] */0
-        ]
-      ],
-      /* :: */[
-        /* :: */[
-          -80.5411648,
-          /* :: */[
-            43.4732381,
-            /* [] */0
-          ]
-        ],
-        /* :: */[
-          /* :: */[
-            -80.53440443,
-            /* :: */[
-              43.46885718,
-              /* [] */0
-            ]
-          ],
-          /* :: */[
-            /* :: */[
-              -80.52298867,
-              /* :: */[
-                43.46414138,
-                /* [] */0
-              ]
-            ],
-            /* :: */[
-              /* :: */[
-                -80.52336904,
-                /* :: */[
-                  43.462144,
-                  /* [] */0
-                ]
-              ],
-              /* :: */[
-                /* :: */[
-                  -80.51836079,
-                  /* :: */[
-                    43.45983591,
-                    /* [] */0
-                  ]
-                ],
-                /* :: */[
-                  /* :: */[
-                    -80.49913146,
-                    /* :: */[
-                      43.45317562,
-                      /* [] */0
-                    ]
-                  ],
-                  /* :: */[
-                    /* :: */[
-                      -80.48734599,
-                      /* :: */[
-                        43.44964771,
-                        /* [] */0
-                      ]
-                    ],
-                    /* :: */[
-                      /* :: */[
-                        -80.49370802,
-                        /* :: */[
-                          43.4501848,
-                          /* [] */0
-                        ]
-                      ],
-                      /* :: */[
-                        /* :: */[
-                          -80.4894232,
-                          /* :: */[
-                            43.448626,
-                            /* [] */0
-                          ]
-                        ],
-                        /* :: */[
-                          /* :: */[
-                            -80.4753731,
-                            /* :: */[
-                              43.44240342,
-                              /* [] */0
-                            ]
-                          ],
-                          /* :: */[
-                            /* :: */[
-                              -80.48359184,
-                              /* :: */[
-                                43.4462947,
-                                /* [] */0
-                              ]
-                            ],
-                            /* :: */[
-                              /* :: */[
-                                -80.47787648,
-                                /* :: */[
-                                  43.43358158,
-                                  /* [] */0
-                                ]
-                              ],
-                              /* :: */[
-                                /* :: */[
-                                  -80.39313812,
-                                  /* :: */[
-                                    43.41029453,
-                                    /* [] */0
-                                  ]
-                                ],
-                                /* :: */[
-                                  /* :: */[
-                                    -80.32804673,
-                                    /* :: */[
-                                      43.40722426,
-                                      /* [] */0
-                                    ]
-                                  ],
-                                  /* :: */[
-                                    /* :: */[
-                                      -80.32107051,
-                                      /* :: */[
-                                        43.38546487,
-                                        /* [] */0
-                                      ]
-                                    ],
-                                    /* :: */[
-                                      /* :: */[
-                                        -80.31882873,
-                                        /* :: */[
-                                          43.37392952,
-                                          /* [] */0
-                                        ]
-                                      ],
-                                      /* :: */[
-                                        /* :: */[
-                                          -80.38889975,
-                                          /* :: */[
-                                            43.413086,
-                                            /* [] */0
-                                          ]
-                                        ],
-                                        /* :: */[
-                                          /* :: */[
-                                            -80.36222258,
-                                            /* :: */[
-                                              43.4004675,
-                                              /* [] */0
-                                            ]
-                                          ],
-                                          /* :: */[
-                                            /* :: */[
-                                              -80.3209874,
-                                              /* :: */[
-                                                43.38636103,
-                                                /* [] */0
-                                              ]
-                                            ],
-                                            /* :: */[
-                                              /* :: */[
-                                                -80.31819008,
-                                                /* :: */[
-                                                  43.37287123,
-                                                  /* [] */0
-                                                ]
-                                              ],
-                                              /* :: */[
-                                                /* :: */[
-                                                  -80.32301446,
-                                                  /* :: */[
-                                                    43.39279373,
-                                                    /* [] */0
-                                                  ]
-                                                ],
-                                                /* :: */[
-                                                  /* :: */[
-                                                    -80.32774659,
-                                                    /* :: */[
-                                                      43.40761002,
-                                                      /* [] */0
-                                                    ]
-                                                  ],
-                                                  /* :: */[
-                                                    /* :: */[
-                                                      -80.44180343,
-                                                      /* :: */[
-                                                        43.42232678,
-                                                        /* [] */0
-                                                      ]
-                                                    ],
-                                                    /* :: */[
-                                                      /* :: */[
-                                                        -80.31368034,
-                                                        /* :: */[
-                                                          43.357354,
-                                                          /* [] */0
-                                                        ]
-                                                      ],
-                                                      /* :: */[
-                                                        /* :: */[
-                                                          -80.49080288,
-                                                          /* :: */[
-                                                            43.45192775,
-                                                            /* [] */0
-                                                          ]
-                                                        ],
-                                                        /* :: */[
-                                                          /* :: */[
-                                                            -80.46308195,
-                                                            /* :: */[
-                                                              43.42282486,
-                                                              /* [] */0
-                                                            ]
-                                                          ],
-                                                          /* :: */[
-                                                            /* :: */[
-                                                              -80.51205622,
-                                                              /* :: */[
-                                                                43.45728346,
-                                                                /* [] */0
-                                                              ]
-                                                            ],
-                                                            /* [] */0
-                                                          ]
-                                                        ]
-                                                      ]
-                                                    ]
-                                                  ]
-                                                ]
-                                              ]
-                                            ]
-                                          ]
-                                        ]
-                                      ]
-                                    ]
-                                  ]
-                                ]
-                              ]
-                            ]
-                          ]
-                        ]
-                      ]
-                    ]
-                  ]
-                ]
-              ]
-            ]
-          ]
-        ]
-      ]
-    ]
-  ]
-];
 
 exports.selectOptions = selectOptions;
 exports.ionStops = ionStops;
