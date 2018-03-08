@@ -74,6 +74,10 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
     | None => state.selectedLocation
     | Some(loc) => loc
   };
+  let offset = switch (state.travelType) {
+  | Transit | IonTransitOnly => -18000000
+  | _ => 0
+  };
   let params = {
     "waypoint": string_of_float(selectedLocation.lat) ++ ","
                 ++ string_of_float(selectedLocation.lng),
@@ -84,7 +88,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
       | IonTransitOnly => 20
     },
     "timeUnit": "minute",
-    "dateTime": Js.Date.toUTCString(Js.Date.fromFloat(state.selectedTime)),
+    "dateTime": Js.Date.toUTCString(Js.Date.fromFloat(state.selectedTime +. float_of_int(offset))),
     "travelMode": switch (state.selectedTravelType) {
         | Transit => "transit"
         | Driving => "driving"
@@ -101,7 +105,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
   Js.Promise.(
     Axios.postData(
       "https://dev.virtualearth.net/REST/v1/Routes/Isochrones?key="
-      ++ "ApZR_vPMZyeXNjB8t5TKwBrom8CtFd-dauFRd4cylgNC8Jnx9Ppxmbqfy9q_Anez",
+      ++ "AtVkKGv4bwzxrZD4WGdKDwPH3We4IJfA_TrzRWJbRMgrHxtT0nSqPFL4JN9TFEID",
       /* TODO - put dev-key into keysConfig file */
       {params}
     )
