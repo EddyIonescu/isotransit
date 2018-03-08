@@ -118,9 +118,11 @@ var ionStops = /* array */[
 function getIsochrone(state, specifiedLocation) {
   var selectedLocation = specifiedLocation ? specifiedLocation[0] : state[/* selectedLocation */0];
   var match = state[/* selectedTravelType */3];
+  var offset = match === 2 || match === 1 ? 0 : -18000000;
   var match$1 = state[/* selectedTravelType */3];
+  var match$2 = state[/* selectedTravelType */3];
   var tmp;
-  switch (match$1) {
+  switch (match$2) {
     case 1 : 
     case 2 : 
         tmp = "driving";
@@ -131,9 +133,9 @@ function getIsochrone(state, specifiedLocation) {
         break;
     
   }
-  var match$2 = state[/* selectedTravelType */3];
+  var match$3 = state[/* selectedTravelType */3];
   var tmp$1;
-  switch (match$2) {
+  switch (match$3) {
     case 1 : 
     case 2 : 
         tmp$1 = "timeWithTraffic";
@@ -146,11 +148,11 @@ function getIsochrone(state, specifiedLocation) {
   }
   var params = {
     waypoint: Pervasives.string_of_float(selectedLocation[/* lat */0]) + ("," + Pervasives.string_of_float(selectedLocation[/* lng */1])),
-    maxTime: match !== 2 ? (
-        match >= 3 ? 20 : state[/* timeLengthMinutes */4]
+    maxTime: match$1 !== 2 ? (
+        match$1 >= 3 ? 20 : state[/* timeLengthMinutes */4]
       ) : state[/* shortTripTimeLengthMinutes */5],
     timeUnit: "minute",
-    dateTime: new Date(state[/* selectedTime */1] - 18000000).toUTCString(),
+    dateTime: new Date(state[/* selectedTime */1] + offset).toUTCString(),
     travelMode: tmp,
     optimize: tmp$1
   };

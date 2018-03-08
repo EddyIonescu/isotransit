@@ -74,7 +74,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
     | None => state.selectedLocation
     | Some(loc) => loc
   };
-  let offset = switch (state.travelType) {
+  let offset = switch (state.selectedTravelType) {
   | Transit | IonTransitOnly => -18000000
   | _ => 0
   };
