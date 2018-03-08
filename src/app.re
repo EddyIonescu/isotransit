@@ -101,7 +101,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
   Js.Promise.(
     Axios.postData(
       "https://dev.virtualearth.net/REST/v1/Routes/Isochrones?key="
-      ++ "Avj-tmXDH_oOb5wmY1yfBkJNSG4hBUVMraHAP5upxDqBLj6ni747Lagw40_4SsVZ",
+      ++ "ApZR_vPMZyeXNjB8t5TKwBrom8CtFd-dauFRd4cylgNC8Jnx9Ppxmbqfy9q_Anez",
       /* TODO - put dev-key into keysConfig file */
       {params}
     )
