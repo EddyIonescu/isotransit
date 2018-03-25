@@ -94,9 +94,6 @@ class Map extends Component {
         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
         onViewportChange={onViewportChange}
       >
-        <div className="navigation-control">
-          <NavigationControl onViewportChange={onViewportChange} />
-        </div>
         <DeckGL
           longitude={selectedLocation.lng}
           latitude={selectedLocation.lat}
