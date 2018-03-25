@@ -51,11 +51,14 @@ class Map extends Component {
   }
 
   render() {
+    let { selectedLocation, layers } = this.props;
     const onViewportChange = viewport => {
+      selectedLocation.lat = viewport.latitude;
+      selectedLocation.lng = viewport.longitude;
       this.setState({ viewport });
     };
     const { viewport } = this.state;
-    let { selectedLocation, layers } = this.props;
+    
     // flatten once as it contains multiple isochrones of the same colour
     layers = _.flatten(layers);
     // put each shape under coordinates into a list
@@ -87,9 +90,9 @@ class Map extends Component {
     console.log(selectedLocation);
     return (
       <ReactMapGL
+        {...viewport}
         longitude={selectedLocation.lng}
         latitude={selectedLocation.lat}
-        {...viewport}
         mapStyle={MAP_STYLE}
         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
         onViewportChange={onViewportChange}
