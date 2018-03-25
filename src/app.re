@@ -9,6 +9,7 @@ type isochrone = {
   travelType: travelType,
   drawing: string,
 };
+
 /*
  * Bing Maps Isochrone API result
  * https://msdn.microsoft.com/en-us/library/mt814919.aspx?f=255&MSPPError=-2147217396
@@ -47,6 +48,7 @@ let selectOptions: array(transportOption) = [|
   {"value": IonTransitOnly, "label": " ION LRT + 20-minute GRT/Walking"}
 |];
 
+/* TODO - pls put into json */
 let ionStops = [|
   [| -80.52945144,	43.49813693 |],
   [| -80.54321203,	43.49721126 |],
@@ -100,7 +102,8 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
       | Driving => "timeWithTraffic"
       | Ion => "timeWithTraffic"
       | IonTransitOnly => "time"
-    }
+    },
+    "Access-Control-Allow-Origin": "*"
   };
   Js.Promise.(
     Axios.postData(
@@ -115,6 +118,9 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
              (List.nth(response##data##resourceSets, 0))##resources, 0)
            )##polygons
          );
+    })
+    |> catch ((error) => {
+      Js.Promise.resolve(None)
     })
   )
 };
@@ -144,7 +150,7 @@ let make = (_children) => {
     | UpdateTimeLength(timeLengthMinutes) =>
         ReasonReact.Update({...state, timeLengthMinutes})
     | AddIsochrone(polygons) =>
-        ReasonReact.Update({...state, layers: polygons})
+        ReasonReact.Update({...state, layers: Array.append(state.layers, polygons)})
     },
   render: (_self) =>
     <div>
@@ -166,7 +172,12 @@ let make = (_children) => {
         )
         |> Js.Promise.then_ ((polygons) => {
           Js.log(polygons);
-          Js.Promise.resolve(_self.send(AddIsochrone(polygons)));
+          Js.Promise.resolve(_self.send(AddIsochrone(
+            Js.Array.reduce((acc, polygon) => switch(polygon) {
+            | None => acc;
+            | Some(p) => Js.Array.push(p, acc); acc
+            }, [||], polygons)
+          )));
         })
         |> Js.Promise.catch ((error) => {
           Js.Promise.resolve(Js.log(error));
@@ -185,6 +196,9 @@ let make = (_children) => {
         options=selectOptions
         value=_self.state.selectedTravelType
       />
-      <Map layers=_self.state.layers />
+      <Map selectedLocation=({
+          "lat": _self.state.selectedLocation.lat,
+          "lng": _self.state.selectedLocation.lng
+      }) layers=_self.state.layers />
     </div>
 };

@@ -4,8 +4,9 @@
 var ReasonReact = require("reason-react/src/ReasonReact.js");
 var MapJsx = require("./react_components/map.jsx");
 
-function make(layers, children) {
+function make(selectedLocation, layers, children) {
   return ReasonReact.wrapJsForReason(MapJsx.default, {
+              selectedLocation: selectedLocation,
               layers: layers
             }, children);
 }

@@ -1,8 +1,8 @@
 [@bs.module "./react_components/map.jsx"] external map : ReasonReact.reactClass = "default";
 
-let make = (~layers, children) =>
+let make = (~selectedLocation, ~layers, children) =>
   ReasonReact.wrapJsForReason(
     ~reactClass=map,
-    ~props={"layers": layers},
+    ~props={"selectedLocation": selectedLocation, "layers": layers},
     children
   );

@@ -154,10 +154,13 @@ function getIsochrone(state, specifiedLocation) {
     timeUnit: "minute",
     dateTime: new Date(state[/* selectedTime */1] + offset).toUTCString(),
     travelMode: tmp,
-    optimize: tmp$1
+    optimize: tmp$1,
+    "Access-Control-Allow-Origin": "*"
   };
   return Axios.post("https://dev.virtualearth.net/REST/v1/Routes/Isochrones?key=AtVkKGv4bwzxrZD4WGdKDwPH3We4IJfA_TrzRWJbRMgrHxtT0nSqPFL4JN9TFEID", params).then((function (response) {
-                return Promise.resolve(List.nth(List.nth(response.data.resourceSets, 0).resources, 0).polygons);
+                  return Promise.resolve(List.nth(List.nth(response.data.resourceSets, 0).resources, 0).polygons);
+                })).catch((function () {
+                return Promise.resolve(/* None */0);
               }));
 }
 
@@ -181,7 +184,14 @@ function make() {
                                                         ]]);
                                           }), ionStops) : /* array */[getIsochrone(_self[/* state */2], /* None */0)]).then((function (polygons) {
                                     console.log(polygons);
-                                    return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons])));
+                                    return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons.reduce((function (acc, polygon) {
+                                                              if (polygon) {
+                                                                acc.push(polygon[0]);
+                                                                return acc;
+                                                              } else {
+                                                                return acc;
+                                                              }
+                                                            }), /* array */[])])));
                                   })).catch((function (error) {
                                   return Promise.resolve((console.log(error), /* () */0));
                                 }));
@@ -191,7 +201,10 @@ function make() {
                             return Curry._1(_self[/* send */4], /* UpdateSelectedTime */Block.__(2, [selectedTime]));
                           }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make((function (t) {
                             return Curry._1(_self[/* send */4], /* TransportSelection */Block.__(1, [t.value]));
-                          }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make(_self[/* state */2][/* layers */7], /* array */[])));
+                          }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make({
+                          lat: _self[/* state */2][/* selectedLocation */0][/* lat */0],
+                          lng: _self[/* state */2][/* selectedLocation */0][/* lng */1]
+                        }, _self[/* state */2][/* layers */7], /* array */[])));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[
@@ -224,7 +237,7 @@ function make() {
             return /* Update */Block.__(0, [(newrecord$3[/* timeLengthMinutes */4] = action[0], newrecord$3)]);
         case 4 : 
             var newrecord$4 = state.slice();
-            return /* Update */Block.__(0, [(newrecord$4[/* layers */7] = action[0], newrecord$4)]);
+            return /* Update */Block.__(0, [(newrecord$4[/* layers */7] = $$Array.append(state[/* layers */7], action[0]), newrecord$4)]);
         
       }
     });

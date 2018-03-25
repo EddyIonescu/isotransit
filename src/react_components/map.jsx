@@ -17,8 +17,6 @@ class Map extends Component {
       viewport: {
         width: window.innerWidth,
         height: window.innerHeight,
-        longitude: -80.5418298,
-        latitude: 43.4684405,
         zoom: 12,
         pitch: 0,
         bearing: 0,
@@ -57,7 +55,7 @@ class Map extends Component {
       this.setState({ viewport });
     };
     const { viewport } = this.state;
-    let { layers } = this.props;
+    let { selectedLocation, layers } = this.props;
     // flatten once as it contains multiple isochrones of the same colour
     layers = _.flatten(layers);
     // put each shape under coordinates into a list
@@ -86,9 +84,11 @@ class Map extends Component {
       iconMapping: ICON_MAPPING,
     });
     console.log(ionStopsLayer);
-
+    console.log(selectedLocation);
     return (
       <ReactMapGL
+        longitude={selectedLocation.lng}
+        latitude={selectedLocation.lat}
         {...viewport}
         mapStyle={MAP_STYLE}
         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
