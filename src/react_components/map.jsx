@@ -7,6 +7,7 @@ import { MAP_STYLE, MAPBOX_ACCESS_TOKEN } from '../keysConfig.json';
 import "./map.css";
 import ionStops from '../ionStops.json';
 
+const turf = require('@turf/turf');
 const atlasIcon = require('../res/icon-atlas.png');
 
 class Map extends Component {
@@ -72,7 +73,7 @@ class Map extends Component {
     };
 
     console.log(ionStops);
-    const ionStopsLayer = new IconLayer({
+    const ionStopsLayer = () => new IconLayer({
       id: 'ion-stops-layer',
       data: ionStops.map(ionStop => ({
         position: [ionStop[0], ionStop[1]], 
@@ -80,11 +81,18 @@ class Map extends Component {
         size: 72,
         color: [20, 50, 250],
       })),
+      pickable: true,
       iconAtlas: atlasIcon,
       iconMapping: ICON_MAPPING,
     });
     console.log(ionStopsLayer);
     console.log(selectedLocation);
+    console.log(layers.length && layers[0][0][0]);
+    const combinedPoly = layers.length > 1 && turf.union(turf.featureCollection(
+      layers.map(p => turf.polygon(p[0]))
+    ));
+    console.log(combinedPoly);
+    console.log(layers.length > 2 && turf.coordAll(combinedPoly));
     return (
       <ReactMapGL
         longitude={selectedLocation.lng}
@@ -94,22 +102,20 @@ class Map extends Component {
         mapboxApiAccessToken={MAPBOX_ACCESS_TOKEN}
         onViewportChange={onViewportChange}
       >
-        <div className="navigation-control">
-          <NavigationControl onViewportChange={onViewportChange} />
-        </div>
         <DeckGL
           longitude={selectedLocation.lng}
           latitude={selectedLocation.lat}
           {...viewport}
-          layers={[...(layers.length ? [new PolygonLayer({
+          layers={[ionStopsLayer(), 
+            ...(layers.length ? [new PolygonLayer({
               id: "polygon-layer",
-              data: layers.map(polygon => ({
-                polygon: polygon[0][0],
-                fillColor: [12, 200, 190],
-              })),
+              data: [{
+                polygon: [turf.coordAll(combinedPoly)],
+                fillColor: [12, 200, 190, 150],
+              }],
               filled: true,
               stroked: false,
-            })] : []), ionStopsLayer]}
+            })] : [])]}
         />
       </ReactMapGL>
     );
