@@ -31,7 +31,7 @@ type state = {
   movingAwayIso: bool,
   selectedTravelType: travelType,
   timeLengthMinutes: int,
-  shortTripTimeLengthMinutes: int,
+  rideshareTimeLengthMinutes: int,
   isochrones: list(isochrone),
   layers: polygons,
 };
@@ -42,11 +42,28 @@ type transportOption = {
 };
 
 let selectOptions: array(transportOption) = [|
-  {"value": Transit, "label": "GRT/Walking (30 min)"},
-  {"value": Driving, "label": "Driving (30 min)"},
-  {"value": Ion, "label": "ION LRT + 10-minute Rideshare"},
-  {"value": IonTransitOnly, "label": " ION LRT + 20-minute GRT/Walking"}
+  {"value": Transit, "label": "Transit"},
+  {"value": Driving, "label": "Driving"},
+  {"value": Ion, "label": "ION LRT + Rideshare"},
+  {"value": IonTransitOnly, "label": " ION LRT + Transit"}
 |];
+
+type timeIntervalOption = {
+  . "value": int,
+    "label": string,
+};
+
+let rec makeTimeIntervals = (first: int, last: int, jump: int) : list(int) =>
+  (first > last) ? [] : [first, ...makeTimeIntervals(first + jump, last, jump)];
+
+let selectTimeIntervalOptions (first, last, jump): array(timeIntervalOption) = 
+  Array.of_list(
+    List.map(
+      (v) => {"value": v, "label": string_of_int(v) ++ " minutes"},
+      makeTimeIntervals(first, last, jump)
+    )
+  );
+
 
 /* TODO - pls put into json */
 let ionStops = [|
@@ -77,7 +94,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
     | Some(loc) => loc
   };
   let offset = switch (state.selectedTravelType) {
-  | Transit | IonTransitOnly => -18000000
+  | Transit | IonTransitOnly => -18000000 /* Bing Maps Transit is buggy */
   | _ => 0
   };
   let params = {
@@ -86,8 +103,8 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
     "maxTime": switch (state.selectedTravelType) {
       | Transit => state.timeLengthMinutes
       | Driving => state.timeLengthMinutes
-      | Ion => state.shortTripTimeLengthMinutes
-      | IonTransitOnly => 20
+      | Ion => state.rideshareTimeLengthMinutes
+      | IonTransitOnly => state.timeLengthMinutes
     },
     "timeUnit": "minute",
     "dateTime": Js.Date.toUTCString(Js.Date.fromFloat(state.selectedTime +. float_of_int(offset))),
@@ -102,8 +119,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
       | Driving => "timeWithTraffic"
       | Ion => "timeWithTraffic"
       | IonTransitOnly => "time"
-    },
-    "Access-Control-Allow-Origin": "*"
+    }
   };
   Js.Promise.(
     Axios.postData(
@@ -132,8 +148,8 @@ let make = (_children) => {
   initialState: () => {
     selectedLocation: {lat: 43.4684405, lng:  -80.5418298},
     selectedTime: Js.Date.now(),
-    timeLengthMinutes: 30,
-    shortTripTimeLengthMinutes: 10,
+    timeLengthMinutes: 20,
+    rideshareTimeLengthMinutes: 10,
     movingAwayIso: true,
     selectedTravelType: Transit,
     isochrones: [],
@@ -153,52 +169,79 @@ let make = (_children) => {
         ReasonReact.Update({...state, layers: Array.append(state.layers, polygons)})
     },
   render: (_self) =>
-    <div>
-      <Location 
-        onSuggestSelect=(
-          (s) => _self.send(
-            SelectedSuggestion({lat: s##location##lat, lng: s##location##lng})
-        ))
-      />
-      <button onClick=((_) => {
-        Js.Promise.all(
-          (switch(_self.state.selectedTravelType) {
-            | Ion | IonTransitOnly => 
-                Array.map((ionStop) => Js.Promise.(getIsochrone(_self.state,
-                        Some({lat: ionStop[1], lng: ionStop[0]})
-                      )), ionStops)
-            | Transit | Driving => [| Js.Promise.(getIsochrone(_self.state, None)) |];
+    <div className="app-container">
+      <div className="options-control">
+        <div className="search-location">
+          <Location 
+            onSuggestSelect=(
+              (s) => _self.send(
+                SelectedSuggestion({lat: s##location##lat, lng: s##location##lng})
+            ))
+          />
+        </div>
+        <h3>{ReasonReact.stringToElement("Departure Time")}</h3>
+        <DateTimePicker
+          selectedTime=_self.state.selectedTime
+          onChange=(selectedTime => _self.send(UpdateSelectedTime(selectedTime)))
+        />
+        <h3>{ReasonReact.stringToElement("Transportation Mode")}</h3>
+        <SelectType
+          onChange=((t) => _self.send(TransportSelection(t##value)))
+          options=selectOptions
+          value=_self.state.selectedTravelType
+        />
+        <h3>{ReasonReact.stringToElement("Total Trip Duration")}</h3>
+        <SelectType
+          onChange=((t) => _self.send(UpdateTimeLength(t##value)))
+          options=selectTimeIntervalOptions(5, 60, 5)
+          value=_self.state.timeLengthMinutes
+        />
+        <h3>{ReasonReact.stringToElement("Max Duration of Ridesharing")}</h3>
+        <SelectType
+          disabled=(switch(_self.state.selectedTravelType) {
+          | Ion => false
+          | _ => true
           })
-        )
-        |> Js.Promise.then_ ((polygons) => {
-          Js.log(polygons);
-          Js.Promise.resolve(_self.send(AddIsochrone(
-            Js.Array.reduce((acc, polygon) => switch(polygon) {
-            | None => acc;
-            | Some(p) => Js.Array.push(p, acc); acc
-            }, [||], polygons)
-          )));
+          onChange=((t) => _self.send(UpdateTimeLength(t##value)))
+          options=selectTimeIntervalOptions(1, 15, 1)
+          value=_self.state.rideshareTimeLengthMinutes
+        />
+        <button onClick=((_) => {
+          Js.Promise.all(
+            (switch(_self.state.selectedTravelType) {
+              | Ion | IonTransitOnly => 
+                  Array.map((ionStop) => Js.Promise.(getIsochrone(_self.state,
+                          Some({lat: ionStop[1], lng: ionStop[0]})
+                        )), ionStops)
+              | Transit | Driving => [| Js.Promise.(getIsochrone(_self.state, None)) |];
+            })
+          )
+          |> Js.Promise.then_ ((polygons) => {
+            Js.log(polygons);
+            Js.Promise.resolve(_self.send(AddIsochrone(
+              Js.Array.reduce((acc, polygon) => switch(polygon) {
+              | None => acc;
+              | Some(p) => Js.Array.push(p, acc); acc
+              }, [||], polygons)
+            )));
+          })
+          |> Js.Promise.catch ((error) => {
+            Js.Promise.resolve(Js.log(error));
+          });
+          ()
         })
-        |> Js.Promise.catch ((error) => {
-          Js.Promise.resolve(Js.log(error));
-        });
-        ()
-      })
-      >
-        <h2>{ReasonReact.stringToElement("Generate Isochrone")}</h2>
-      </button>
-      <DateTimePicker
-        selectedTime=_self.state.selectedTime
-        onChange=(selectedTime => _self.send(UpdateSelectedTime(selectedTime)))
-      />
-      <SelectType
-        onChange=((t) => _self.send(TransportSelection(t##value)))
-        options=selectOptions
-        value=_self.state.selectedTravelType
-      />
-      <Map selectedLocation=({
-          "lat": _self.state.selectedLocation.lat,
-          "lng": _self.state.selectedLocation.lng
-      }) layers=_self.state.layers />
+        >
+          <h2>{ReasonReact.stringToElement("Generate Isochrone")}</h2>
+        </button>
+      </div>
+      <div className="map">
+        <Map 
+          selectedLocation=({
+            "lat": _self.state.selectedLocation.lat,
+            "lng": _self.state.selectedLocation.lng
+          }) 
+          layers=_self.state.layers
+        />
+      </div>
     </div>
 };

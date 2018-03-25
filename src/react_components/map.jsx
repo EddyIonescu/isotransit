@@ -98,6 +98,8 @@ class Map extends Component {
           <NavigationControl onViewportChange={onViewportChange} />
         </div>
         <DeckGL
+          longitude={selectedLocation.lng}
+          latitude={selectedLocation.lat}
           {...viewport}
           layers={[...(layers.length ? [new PolygonLayer({
               id: "polygon-layer",

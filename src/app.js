@@ -20,21 +20,42 @@ var DateTimePicker$MultimodalIsochrone = require("./dateTimePicker.js");
 var selectOptions = /* array */[
   {
     value: /* Transit */0,
-    label: "GRT/Walking (30 min)"
+    label: "Transit"
   },
   {
     value: /* Driving */1,
-    label: "Driving (30 min)"
+    label: "Driving"
   },
   {
     value: /* Ion */2,
-    label: "ION LRT + 10-minute Rideshare"
+    label: "ION LRT + Rideshare"
   },
   {
     value: /* IonTransitOnly */3,
-    label: " ION LRT + 20-minute GRT/Walking"
+    label: " ION LRT + Transit"
   }
 ];
+
+function makeTimeIntervals(first, last, jump) {
+  var match = +(first > last);
+  if (match !== 0) {
+    return /* [] */0;
+  } else {
+    return /* :: */[
+            first,
+            makeTimeIntervals(first + jump | 0, last, jump)
+          ];
+  }
+}
+
+function selectTimeIntervalOptions(first, last, jump) {
+  return $$Array.of_list(List.map((function (v) {
+                    return {
+                            value: v,
+                            label: Pervasives.string_of_int(v) + " minutes"
+                          };
+                  }), makeTimeIntervals(first, last, jump)));
+}
 
 var ionStops = /* array */[
   /* float array */[
@@ -148,14 +169,11 @@ function getIsochrone(state, specifiedLocation) {
   }
   var params = {
     waypoint: Pervasives.string_of_float(selectedLocation[/* lat */0]) + ("," + Pervasives.string_of_float(selectedLocation[/* lng */1])),
-    maxTime: match$1 !== 2 ? (
-        match$1 >= 3 ? 20 : state[/* timeLengthMinutes */4]
-      ) : state[/* shortTripTimeLengthMinutes */5],
+    maxTime: match$1 !== 2 ? state[/* timeLengthMinutes */4] : state[/* rideshareTimeLengthMinutes */5],
     timeUnit: "minute",
     dateTime: new Date(state[/* selectedTime */1] + offset).toUTCString(),
     travelMode: tmp,
-    optimize: tmp$1,
-    "Access-Control-Allow-Origin": "*"
+    optimize: tmp$1
   };
   return Axios.post("https://dev.virtualearth.net/REST/v1/Routes/Isochrones?key=AtVkKGv4bwzxrZD4WGdKDwPH3We4IJfA_TrzRWJbRMgrHxtT0nSqPFL4JN9TFEID", params).then((function (response) {
                   return Promise.resolve(List.nth(List.nth(response.data.resourceSets, 0).resources, 0).polygons);
@@ -169,42 +187,55 @@ var component = ReasonReact.reducerComponent("App");
 function make() {
   var newrecord = component.slice();
   newrecord[/* render */9] = (function (_self) {
-      return React.createElement("div", undefined, ReasonReact.element(/* None */0, /* None */0, Location$MultimodalIsochrone.make((function (s) {
-                            return Curry._1(_self[/* send */4], /* SelectedSuggestion */Block.__(0, [/* float array */[
-                                            s.location.lat,
-                                            s.location.lng
-                                          ]]));
-                          }), /* array */[])), React.createElement("button", {
-                      onClick: (function () {
-                          var match = _self[/* state */2][/* selectedTravelType */3];
-                          Promise.all(match >= 2 ? $$Array.map((function (ionStop) {
-                                            return getIsochrone(_self[/* state */2], /* Some */[/* float array */[
-                                                          Caml_array.caml_array_get(ionStop, 1),
-                                                          Caml_array.caml_array_get(ionStop, 0)
-                                                        ]]);
-                                          }), ionStops) : /* array */[getIsochrone(_self[/* state */2], /* None */0)]).then((function (polygons) {
-                                    console.log(polygons);
-                                    return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons.reduce((function (acc, polygon) {
-                                                              if (polygon) {
-                                                                acc.push(polygon[0]);
-                                                                return acc;
-                                                              } else {
-                                                                return acc;
-                                                              }
-                                                            }), /* array */[])])));
-                                  })).catch((function (error) {
-                                  return Promise.resolve((console.log(error), /* () */0));
-                                }));
-                          return /* () */0;
-                        })
-                    }, React.createElement("h2", undefined, "Generate Isochrone")), ReasonReact.element(/* None */0, /* None */0, DateTimePicker$MultimodalIsochrone.make(_self[/* state */2][/* selectedTime */1], (function (selectedTime) {
-                            return Curry._1(_self[/* send */4], /* UpdateSelectedTime */Block.__(2, [selectedTime]));
-                          }), /* array */[])), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make((function (t) {
-                            return Curry._1(_self[/* send */4], /* TransportSelection */Block.__(1, [t.value]));
-                          }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make({
-                          lat: _self[/* state */2][/* selectedLocation */0][/* lat */0],
-                          lng: _self[/* state */2][/* selectedLocation */0][/* lng */1]
-                        }, _self[/* state */2][/* layers */7], /* array */[])));
+      var match = _self[/* state */2][/* selectedTravelType */3];
+      return React.createElement("div", {
+                  className: "app-container"
+                }, React.createElement("div", {
+                      className: "options-control"
+                    }, React.createElement("div", {
+                          className: "search-location"
+                        }, ReasonReact.element(/* None */0, /* None */0, Location$MultimodalIsochrone.make((function (s) {
+                                    return Curry._1(_self[/* send */4], /* SelectedSuggestion */Block.__(0, [/* float array */[
+                                                    s.location.lat,
+                                                    s.location.lng
+                                                  ]]));
+                                  }), /* array */[]))), React.createElement("h3", undefined, "Departure Time"), ReasonReact.element(/* None */0, /* None */0, DateTimePicker$MultimodalIsochrone.make(_self[/* state */2][/* selectedTime */1], (function (selectedTime) {
+                                return Curry._1(_self[/* send */4], /* UpdateSelectedTime */Block.__(2, [selectedTime]));
+                              }), /* array */[])), React.createElement("h3", undefined, "Transportation Mode"), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make(/* None */0, (function (t) {
+                                return Curry._1(_self[/* send */4], /* TransportSelection */Block.__(1, [t.value]));
+                              }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), React.createElement("h3", undefined, "Total Trip Duration"), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make(/* None */0, (function (t) {
+                                return Curry._1(_self[/* send */4], /* UpdateTimeLength */Block.__(3, [t.value]));
+                              }), selectTimeIntervalOptions(5, 60, 5), _self[/* state */2][/* timeLengthMinutes */4], /* array */[])), React.createElement("h3", undefined, "Max Duration of Ridesharing"), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make(/* Some */[match !== 2 ? /* true */1 : /* false */0], (function (t) {
+                                return Curry._1(_self[/* send */4], /* UpdateTimeLength */Block.__(3, [t.value]));
+                              }), selectTimeIntervalOptions(1, 15, 1), _self[/* state */2][/* rideshareTimeLengthMinutes */5], /* array */[])), React.createElement("button", {
+                          onClick: (function () {
+                              var match = _self[/* state */2][/* selectedTravelType */3];
+                              Promise.all(match >= 2 ? $$Array.map((function (ionStop) {
+                                                return getIsochrone(_self[/* state */2], /* Some */[/* float array */[
+                                                              Caml_array.caml_array_get(ionStop, 1),
+                                                              Caml_array.caml_array_get(ionStop, 0)
+                                                            ]]);
+                                              }), ionStops) : /* array */[getIsochrone(_self[/* state */2], /* None */0)]).then((function (polygons) {
+                                        console.log(polygons);
+                                        return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons.reduce((function (acc, polygon) {
+                                                                  if (polygon) {
+                                                                    acc.push(polygon[0]);
+                                                                    return acc;
+                                                                  } else {
+                                                                    return acc;
+                                                                  }
+                                                                }), /* array */[])])));
+                                      })).catch((function (error) {
+                                      return Promise.resolve((console.log(error), /* () */0));
+                                    }));
+                              return /* () */0;
+                            })
+                        }, React.createElement("h2", undefined, "Generate Isochrone"))), React.createElement("div", {
+                      className: "map"
+                    }, ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make({
+                              lat: _self[/* state */2][/* selectedLocation */0][/* lat */0],
+                              lng: _self[/* state */2][/* selectedLocation */0][/* lng */1]
+                            }, _self[/* state */2][/* layers */7], /* array */[]))));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[
@@ -215,8 +246,8 @@ function make() {
               /* selectedTime */Date.now(),
               /* movingAwayIso : true */1,
               /* selectedTravelType : Transit */0,
-              /* timeLengthMinutes */30,
-              /* shortTripTimeLengthMinutes */10,
+              /* timeLengthMinutes */20,
+              /* rideshareTimeLengthMinutes */10,
               /* isochrones : [] */0,
               /* layers : array */[]
             ];
@@ -245,6 +276,8 @@ function make() {
 }
 
 exports.selectOptions = selectOptions;
+exports.makeTimeIntervals = makeTimeIntervals;
+exports.selectTimeIntervalOptions = selectTimeIntervalOptions;
 exports.ionStops = ionStops;
 exports.getIsochrone = getIsochrone;
 exports.component = component;
