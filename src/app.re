@@ -23,6 +23,7 @@ type action =
   | TransportSelection(travelType)
   | UpdateSelectedTime(float)
   | UpdateTimeLength(int)
+  | UpdateRideshareTimeLength(int)
   | AddIsochrone(polygons);
 
 type state = {
@@ -165,6 +166,8 @@ let make = (_children) => {
         ReasonReact.Update({...state, selectedTime})
     | UpdateTimeLength(timeLengthMinutes) =>
         ReasonReact.Update({...state, timeLengthMinutes})
+    | UpdateRideshareTimeLength(rideshareTimeLengthMinutes) =>
+        ReasonReact.Update({...state, rideshareTimeLengthMinutes})
     | AddIsochrone(polygons) =>
         ReasonReact.Update({...state, layers: Array.append(state.layers, polygons)})
     },
@@ -202,7 +205,7 @@ let make = (_children) => {
           | Ion => false
           | _ => true
           })
-          onChange=((t) => _self.send(UpdateTimeLength(t##value)))
+          onChange=((t) => _self.send(UpdateRideshareTimeLength(t##value)))
           options=selectTimeIntervalOptions(1, 15, 1)
           value=_self.state.rideshareTimeLengthMinutes
         />

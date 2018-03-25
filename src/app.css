@@ -29,12 +29,11 @@
 
 .search-location {
   color: black;
-  margin-left: -130px;
-  width: 180%
 }
 
 .options-control {
   z-index: 10;
+  align-items: flex-start !important;
 	position: absolute; 
 	left: 0;
   padding: 10px;

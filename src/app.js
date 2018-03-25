@@ -206,7 +206,7 @@ function make() {
                               }), selectOptions, _self[/* state */2][/* selectedTravelType */3], /* array */[])), React.createElement("h3", undefined, "Total Trip Duration"), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make(/* None */0, (function (t) {
                                 return Curry._1(_self[/* send */4], /* UpdateTimeLength */Block.__(3, [t.value]));
                               }), selectTimeIntervalOptions(5, 60, 5), _self[/* state */2][/* timeLengthMinutes */4], /* array */[])), React.createElement("h3", undefined, "Max Duration of Ridesharing"), ReasonReact.element(/* None */0, /* None */0, SelectType$MultimodalIsochrone.make(/* Some */[match !== 2 ? /* true */1 : /* false */0], (function (t) {
-                                return Curry._1(_self[/* send */4], /* UpdateTimeLength */Block.__(3, [t.value]));
+                                return Curry._1(_self[/* send */4], /* UpdateRideshareTimeLength */Block.__(4, [t.value]));
                               }), selectTimeIntervalOptions(1, 15, 1), _self[/* state */2][/* rideshareTimeLengthMinutes */5], /* array */[])), React.createElement("button", {
                           onClick: (function () {
                               var match = _self[/* state */2][/* selectedTravelType */3];
@@ -217,7 +217,7 @@ function make() {
                                                             ]]);
                                               }), ionStops) : /* array */[getIsochrone(_self[/* state */2], /* None */0)]).then((function (polygons) {
                                         console.log(polygons);
-                                        return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(4, [polygons.reduce((function (acc, polygon) {
+                                        return Promise.resolve(Curry._1(_self[/* send */4], /* AddIsochrone */Block.__(5, [polygons.reduce((function (acc, polygon) {
                                                                   if (polygon) {
                                                                     acc.push(polygon[0]);
                                                                     return acc;
@@ -268,7 +268,10 @@ function make() {
             return /* Update */Block.__(0, [(newrecord$3[/* timeLengthMinutes */4] = action[0], newrecord$3)]);
         case 4 : 
             var newrecord$4 = state.slice();
-            return /* Update */Block.__(0, [(newrecord$4[/* layers */7] = $$Array.append(state[/* layers */7], action[0]), newrecord$4)]);
+            return /* Update */Block.__(0, [(newrecord$4[/* rideshareTimeLengthMinutes */5] = action[0], newrecord$4)]);
+        case 5 : 
+            var newrecord$5 = state.slice();
+            return /* Update */Block.__(0, [(newrecord$5[/* layers */7] = $$Array.append(state[/* layers */7], action[0]), newrecord$5)]);
         
       }
     });
