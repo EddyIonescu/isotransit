@@ -158,6 +158,9 @@ function getIsochrone(state, specifiedLocation) {
   var tmp$1;
   switch (match$3) {
     case 1 : 
+        var match$4 = +(state[/* timeLengthMinutes */4] < 10);
+        tmp$1 = match$4 !== 0 ? "time" : "timeWithTraffic";
+        break;
     case 2 : 
         tmp$1 = "timeWithTraffic";
         break;
@@ -235,7 +238,7 @@ function make() {
                     }, ReasonReact.element(/* None */0, /* None */0, Map$MultimodalIsochrone.make({
                               lat: _self[/* state */2][/* selectedLocation */0][/* lat */0],
                               lng: _self[/* state */2][/* selectedLocation */0][/* lng */1]
-                            }, _self[/* state */2][/* layers */7], /* array */[]))));
+                            }, $$Array.of_list(_self[/* state */2][/* isochrones */6]), /* array */[]))));
     });
   newrecord[/* initialState */10] = (function () {
       return /* record */[
@@ -248,8 +251,7 @@ function make() {
               /* selectedTravelType : Transit */0,
               /* timeLengthMinutes */20,
               /* rideshareTimeLengthMinutes */10,
-              /* isochrones : [] */0,
-              /* layers : array */[]
+              /* isochrones : [] */0
             ];
     });
   newrecord[/* reducer */12] = (function (action, state) {
@@ -270,8 +272,19 @@ function make() {
             var newrecord$4 = state.slice();
             return /* Update */Block.__(0, [(newrecord$4[/* rideshareTimeLengthMinutes */5] = action[0], newrecord$4)]);
         case 5 : 
+            var polygons = action[0];
+            console.log(polygons);
             var newrecord$5 = state.slice();
-            return /* Update */Block.__(0, [(newrecord$5[/* layers */7] = $$Array.append(state[/* layers */7], action[0]), newrecord$5)]);
+            return /* Update */Block.__(0, [(newrecord$5[/* isochrones */6] = /* :: */[
+                          /* record */[
+                            /* location */state[/* selectedLocation */0],
+                            /* time */state[/* selectedTime */1],
+                            /* movingAway */state[/* movingAwayIso */2],
+                            /* travelType */state[/* selectedTravelType */3],
+                            /* drawing */polygons
+                          ],
+                          state[/* isochrones */6]
+                        ], newrecord$5)]);
         
       }
     });

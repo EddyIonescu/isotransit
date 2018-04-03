@@ -51,14 +51,24 @@ class Map extends Component {
   }
 
   render() {
-    let { selectedLocation, layers } = this.props;
+    let { selectedLocation, isochrones } = this.props;
     const onViewportChange = viewport => {
       selectedLocation.lat = viewport.latitude;
       selectedLocation.lng = viewport.longitude;
       this.setState({ viewport });
     };
     const { viewport } = this.state;
-    
+    console.log(isochrones);
+    isochrones = isochrones.map(iso => ({
+      layers: _.flatten(iso[4])
+              .map(layer => ([layer.coordinates]))
+              .map(layer => 
+                layer.map(polygons => 
+                  polygons.map(coords => 
+                    coords.map(coord => 
+                      ([coord[1], coord[0]])))))
+    })).filter(iso => !!iso.layers); // should be drawing field - TODO - fix!
+    /*
     // flatten once as it contains multiple isochrones of the same colour
     layers = _.flatten(layers);
     // put each shape under coordinates into a list
@@ -67,6 +77,16 @@ class Map extends Component {
     // lat,lng - geography/transportation/science - lng,lat - CS
     layers = layers.map(layer => layer.map(polygons => polygons.map(coords => coords.map(coord => ([coord[1], coord[0]])))));
     console.log(layers);
+    */
+
+    const colors = [
+      [38, 204, 107, 150], // green - 5 minutes
+      [38, 195, 204, 120], // turquoise - 10 minutes
+      [66, 185, 244, 100], // sky blue - 15 minutes
+      [38, 107, 204, 90], // blue - 20 minutes
+      [137, 66, 244, 80], // violet - 25 minutes
+    ];
+    colors.reverse();
 
     const ICON_MAPPING = {
       marker: {
@@ -101,15 +121,16 @@ class Map extends Component {
           longitude={selectedLocation.lng}
           latitude={selectedLocation.lat}
           {...viewport}
-          layers={[...(layers.length ? [new PolygonLayer({
-              id: "polygon-layer",
-              data: layers.map(polygon => ({
+          layers={[...(isochrones.length ? isochrones.map((iso, idx) =>
+            new PolygonLayer({
+              id: `polygon-layer${idx}`,
+              data: iso.layers.map(polygon => ({
                 polygon: polygon[0][0],
-                fillColor: [12, 200, 190],
+                fillColor: colors[idx % colors.length]
               })),
               filled: true,
               stroked: false,
-            })] : []), ionStopsLayer]}
+            })) : []), ionStopsLayer]}
         />
       </ReactMapGL>
     );

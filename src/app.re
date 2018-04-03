@@ -2,21 +2,24 @@
 
 type location = {lat: float, lng: float};
 type travelType = Transit | Driving | Ion | IonTransitOnly;
-type isochrone = {
-  location: location,
-  time: int,
-  movingAway: bool,
-  travelType: travelType,
-  drawing: string,
-};
+
 
 /*
  * Bing Maps Isochrone API result
  * https://msdn.microsoft.com/en-us/library/mt814919.aspx?f=255&MSPPError=-2147217396
+ * (standard GeoJson Polygon definition)
  */ 
 type polygons = array({
   . "coordinates": array(array(float))
 });
+
+type isochrone = {
+  location: location,
+  time: float,
+  movingAway: bool,
+  travelType: travelType,
+  drawing: polygons,
+};
 
 type action =
   | SelectedSuggestion(location)
@@ -34,7 +37,6 @@ type state = {
   timeLengthMinutes: int,
   rideshareTimeLengthMinutes: int,
   isochrones: list(isochrone),
-  layers: polygons,
 };
 
 type transportOption = {
@@ -117,7 +119,7 @@ let getIsochrone = (state: state, specifiedLocation: option(location)) => {
       },
     "optimize": switch (state.selectedTravelType) {
       | Transit => "time"
-      | Driving => "timeWithTraffic"
+      | Driving => state.timeLengthMinutes < 10 ? "time" : "timeWithTraffic"
       | Ion => "timeWithTraffic"
       | IonTransitOnly => "time"
     }
@@ -154,7 +156,6 @@ let make = (_children) => {
     movingAwayIso: true,
     selectedTravelType: Transit,
     isochrones: [],
-    layers: [||],
   },
   reducer: (action, state) =>
     switch (action) {
@@ -169,7 +170,14 @@ let make = (_children) => {
     | UpdateRideshareTimeLength(rideshareTimeLengthMinutes) =>
         ReasonReact.Update({...state, rideshareTimeLengthMinutes})
     | AddIsochrone(polygons) =>
-        ReasonReact.Update({...state, layers: Array.append(state.layers, polygons)})
+        Js.log(polygons);
+        ReasonReact.Update({...state, isochrones: [{
+          location: state.selectedLocation,
+          time: state.selectedTime,
+          movingAway: state.movingAwayIso,
+          travelType: state.selectedTravelType,
+          drawing: polygons
+        }, ...state.isochrones]})
     },
   render: (_self) =>
     <div className="app-container">
@@ -242,8 +250,8 @@ let make = (_children) => {
           selectedLocation=({
             "lat": _self.state.selectedLocation.lat,
             "lng": _self.state.selectedLocation.lng
-          }) 
-          layers=_self.state.layers
+          })
+          isochrones=Array.of_list(_self.state.isochrones)
         />
       </div>
     </div>
